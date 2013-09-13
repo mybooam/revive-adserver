@@ -1,10 +1,9 @@
-<project name="openx" default="package" basedir=".">
+<project name="revive" default="package" basedir=".">
   <property name="test.conf.xml" value="devel.xml"/>
   <property name="dir.test.results" location="build/test-results"/>
   <property name="dir.test.reports" location="build/test-results"/>
   <property name="origin" value=""/>
   <property file="devel.properties"/>
-  <property file="etc/version.properties"/>
 
   <!-- Import the include/exclude filelist -->
   <import file="build-filelist.xml"/>
@@ -12,16 +11,12 @@
   <!-- Package Integrity Plugin -->
   <taskdef name="checkdistribution" classname="org.openads.ant.CheckDistributionTask"/>
 
-  <macrodef name="oa-version" description="Sets a value of the OA_VERSION constant in the constants.php file.">
+  <macrodef name="rev-version" description="Sets a value of the VERSION constant in the constants.php file.">
     <attribute name="versionstring" description="A version to be set."/>
     <sequential>
       <replaceregexp file="constants.php"
         match="^ *define\('VERSION.*$"
         replace="    define('VERSION', '@{versionstring}');"
-        byline="true"/>
-      <replaceregexp file="constants.php"
-        match="^ *define\('OA_VERSION.*$"
-        replace="    define('OA_VERSION', '@{versionstring}');"
         byline="true"/>
     </sequential>
   </macrodef>
@@ -41,13 +36,6 @@
     <exec dir="${basedir}/scripts/delivery" executable="php" failonerror="true">
         <arg value="rebuild.php" />
     </exec>
-  </target>
-
-  <target name="delivery-commit"
-    description="Merge delivery files into /www/delivery folder to optimize their speed and commit the generated files to the SVN."
-    depends="generate-delivery"
-  >
-    <svn-commit file="www/delivery" notes="Commit of auto-generated delivery files."/>
   </target>
 
   <target name="generate-xml-cache" description="Generate XML Cache from MDB2 Schema XML files">
@@ -75,12 +63,8 @@
     <property name="label" value="trunk"/>
   </target>
 
-  <target name="init-revision" unless="svnrevision">
-    <property name="svnrevision" value="na"/>
-  </target>
-
-  <target name="init-version" unless="version" depends="init-timestamp, init-label, init-revision">
-    <property name="version" value="${label}-${cctimestamp}-rev-${svnrevision}"/>
+  <target name="init-version" unless="version" depends="init-timestamp, init-label">
+    <property name="version" value="${label}-${cctimestamp}"/>
   </target>
 
   <target name="init-release" unless="release" depends="init,init-version">
@@ -90,12 +74,14 @@
 
   <target name="prepare-version-info" if="version" depends="init-release">
     <echo message="Setting OA_VERSION to '${version}'."/>
-    <oa-version versionstring="${version}"/>
+    <rev-version versionstring="${version}"/>
   </target>
 
   <!-- ******************************************************************** -->
   <!-- PACKAGE TARGETS                                                      -->
   <!-- ******************************************************************** -->
+
+  <target name="package" depends="generate-delivery, generate-xml-cache, checkconsistency, prepare-distribution, package-bzip2, package-gz, package-zip"/>
 
   <target name="checkconsistency"
     description="Checks whether all the files in the working directory are specified in the included or excluded lists of files.">
@@ -137,28 +123,22 @@
     <zip destfile="${dir.test.results}/${release}${origin}.zip" basedir="${dir.test.results}"  includes="${release}/**"/>
   </target>
 
-  <target name="package" depends="generate-delivery, generate-xml-cache, checkconsistency, prepare-distribution, package-bzip2, package-gz, package-zip"/>
-
   <target name="write-origin-id" depends="prepare-version-info" if="originid">
     <echo message="${originid}" file="${dir.test.results}/${release}/etc/origin.txt" append="no"/>
   </target>
 
   <target name="repackage" if="originid" depends="write-origin-id,package-bzip2,package-gz,package-zip"/>
 
-  <target name="build" depends="package, revert-after-packaging" description="Run this if you want your own release files built."/>
+  <target name="build" depends="package" description="Run this if you want your own release files built."/>
 
   <!-- ******************************************************************** -->
   <!-- RELEASE TARGETS                                                      -->
   <!-- ******************************************************************** -->
 
-  <target name="revert-after-packaging">
-    <svn-revert file="constants.php"/>
-  </target>
-
   <target name="release" depends="oa-save-version, package" if="version"/>
 
   <target name="oa-save-version" if="version">
-    <oa-version versionstring="${version}"/>
+    <rev-version versionstring="${version}"/>
   </target>
 
   <!-- ******************************************************************** -->

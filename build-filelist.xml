@@ -58,6 +58,7 @@
     <exclude name="nbproject/**"/>
     <exclude name="**/tests"/>
     <exclude name="**/tests/**"/>
+    <exclude name="**/.git*"/>
     <exclude name="**/*.log"/><!-- Log files -->
   </patternset>
 
@@ -116,6 +117,8 @@
     <include name="**/tests/**"/>
     <include name="**/*.log"/><!-- Log files -->
     <include name="**/.*.swp"/><!-- Vim swap files -->
+    <include name="**/.git*"/>
+    <include name="**/.git*/**"/>
   </patternset>
 
   <!-- List of all directories that should be set to globally
