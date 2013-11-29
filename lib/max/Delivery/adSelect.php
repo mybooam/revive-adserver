@@ -279,6 +279,15 @@ function MAX_adSelect($what, $campaignid = '', $target = '', $source = '', $with
             MAX_Delivery_log_setLastAction(0, array($row['bannerid']), array($zoneId), array($row['viewwindow']));
         }
     } else {
+
+        if (!empty($zoneId)) {
+            $logUrl = _adRenderBuildLogURL(array(
+                'ad_id' => 0,
+                'placement_id' => 0,
+            ), $zoneId, $source, $loc, $referer, '&');
+            $g_append = str_replace('{random}', MAX_getRandomNumber(), MAX_adRenderImageBeacon($logUrl)).$g_append;
+        }
+
         // No banner found
         if (!empty($row['default'])) {
             // Return the default banner
@@ -390,7 +399,7 @@ function _adSelectZone($zoneId, $context = array(), $source = '', $richMedia = t
 {
     // ZoneID zero is used for direct selected adRequests only
     if ($zoneId === 0) { return false; }
-    
+
     global $g_append, $g_prepend;
     while (!in_array($zoneId, $GLOBALS['_MAX']['followedChain'])) {
         $GLOBALS['_MAX']['followedChain'][] = $zoneId;
@@ -874,8 +883,8 @@ function _adSelect(&$aLinkedAdInfos, $context, $source, $richMedia, $companion, 
                 $ad['tracker_status'] = (!empty($aLinkedAd['tracker_status'])) ? $aLinkedAd['tracker_status'] : null;
                 // Carry over for ad dimensions for market ads
                 if($ad['width'] == $ad['height'] && $ad['width'] == -1) {
-                   $ad['width'] = $aLinkedAd['width']; 
-                   $ad['height'] = $aLinkedAd['height']; 
+                   $ad['width'] = $aLinkedAd['width'];
+                   $ad['height'] = $aLinkedAd['height'];
                 }
                 return $ad;
             }
